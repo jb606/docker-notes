@@ -1,0 +1,35 @@
+version: '3.5'
+
+services:
+  nexus:
+    image: sonatype/nexus3:latest
+    restart: always
+    volumes:
+      - ./nexus-data:/nexus-data
+
+    networks:
+      - web
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nx.rule=Host(`nx.int.lan`)
+      - traefik.http.routers.nx.entrypoints=https
+      - traefik.http.routers.nx.tls=true
+      - traefik.http.routers.nx.service=nxSvc
+      - traefik.http.services.nxSvc.loadbalancer.server.port=8081
+
+      - traefik.http.routers.reg-nx.rule=Host(`docker.int.lan`)
+      - traefik.http.routers.reg-nx.entrypoints=https
+      - traefik.http.routers.reg-nx.tls=true
+      - traefik.http.routers.reg-nx.service=reg-nxsvc
+      - traefik.http.services.reg-nxsvc.loadbalancer.server.port=8082
+
+      - traefik.http.routers.regl-nx.rule=Host(`registry.int.lan`)
+      - traefik.http.routers.regl-nx.entrypoints=https
+      - traefik.http.routers.regl-nx.tls=true
+      - traefik.http.routers.regl-nx.service=regl-nxsvc
+      - traefik.http.services.regl-nxsvc.loadbalancer.server.port=8083
+
+networks:
+  web:
+    external: true
+    name: web

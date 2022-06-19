@@ -1,0 +1,59 @@
+version: '3.7'
+
+services:
+
+  ## WEB STUFF ##
+  socket-proxy:
+    restart: always
+    image: tecnativa/docker-socket-proxy:latest
+    environment:
+      CONTAINERS: 1
+      SERVICES: 1
+      NETWORKS: 1
+      TASKS: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - localnet
+
+  traefik:
+    image: "traefik:latest"
+    restart: always
+    volumes:
+      - ../certs:/certs
+      - ./traefik:/config
+    command:
+      - --entrypoints.https.address=:443
+      - --entrypoints.ldap.address=:389
+      - --entrypoints.ldaps.address=:686
+      - --entrypoints.http.address=:80
+      - --entrypoints.jenkins.address=:50000
+      - --entrypoints.portainer-agent.address=:8000
+      - --providers.docker=true
+      - --providers.docker.endpoint=tcp://socket-proxy:2375
+      - --api.dashboard=true
+      - --providers.docker.exposedbydefault=false
+      - --log.level=WARN
+      - --providers.file.directory=/config
+      - --providers.file.watch=true
+      - --providers.docker.swarmmode=false
+    ports:
+      - "443:443"
+      - "80:80"
+      - "50000:50000"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.rule=Host(`docker01.int.lan`)
+      - traefik.http.services.dummy-svc.loadbalancer.server.port=8080
+      - traefik.http.routers.traefik.tls=true
+    networks:
+      - web
+      - localnet
+
+
+networks:
+  localnet:
+  web:
+    external: true
+    name: web

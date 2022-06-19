@@ -1,0 +1,15 @@
+tls:
+  certificates:
+    - certFile: /certs/docker.int.lan.crt
+      keyFile: /certs/docker.int.lan.key
+    - certFile: /certs/int.lan.crt
+      keyFile: /certs/int.lan.key
+    - certFile: /certs/nx.int.lan.crt
+      keyFile: /certs/nx.int.lan.key
+      stores:
+        - default
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/docker.int.lan.crt
+        keyFile: /certs/docker.int.lan.key
