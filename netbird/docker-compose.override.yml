@@ -1,0 +1,65 @@
+version: "3"
+services:
+  #UI dashboard
+  dashboard:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.netbird.entryPoints=https
+      - traefik.http.routers.netbird.rule=Host(`netbird.home.lan`)
+      - traefik.http.routers.netbird.tls=true
+      - traefik.http.routers.netbird.tls.certresolver=ipa
+      - traefik.http.services.netbird.loadbalancer.passHostHeader=true
+      - traefik.http.services.netbird.loadbalancer.server.port=80
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+    networks:
+      - web
+
+  # Signal
+  signal:
+    networks:
+      - web
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.netbirdsignal.entryPoints=https
+      - traefik.http.routers.netbirdsignal.tls=true
+      - traefik.http.routers.netbirdsignal.tls.certresolver=ipa
+      - traefik.http.routers.netbirdsignal.rule=Host(`netbird.home.lan`) && ( PathPrefix(`/signalexchange.SignalExchange/`) || PathPrefix(`/signalexchange`) )
+      - traefik.http.routers.netbirdsignal.service=netbirdsignal
+      - traefik.http.services.netbirdsignal.loadbalancer.passHostHeader=true
+      - traefik.http.services.netbirdsignal.loadbalancer.server.port=80
+      - traefik.http.services.netbirdsignal.loadbalancer.server.scheme=h2c
+
+  # Management
+  management:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.netbirdapi.entryPoints=https
+      - traefik.http.routers.netbirdapi.rule=Host(`netbird.home.lan`) && PathPrefix(`/api`)
+      - traefik.http.routers.netbirdapi.service=netbirdapi
+      - traefik.http.services.netbirdapi.loadbalancer.passHostHeader=true
+      - traefik.http.services.netbirdapi.loadbalancer.server.port=443
+      - traefik.http.routers.netbirdapi.tls=true
+      - traefik.http.routers.netbirdapi.tls.certresolver=ipa
+
+      - traefik.http.routers.netbirdmanagement.entryPoints=https
+      - traefik.http.routers.netbirdmanagement.tls=true
+      - traefik.http.routers.netbirdmanagement.tls.certresolver=ipa
+      - traefik.http.routers.netbirdmanagement.rule=Host(`netbird.home.lan`) && ( PathPrefix(`/management.ManagementService/`) || PathPrefix(`/management`) )
+      - traefik.http.routers.netbirdmanagement.service=netbirdmanagement
+      - traefik.http.services.netbirdmanagement.loadbalancer.passHostHeader=true
+      - traefik.http.services.netbirdmanagement.loadbalancer.server.port=443
+      - traefik.http.services.netbirdmanagement.loadbalancer.server.scheme=h2c
+    networks:
+      - web
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+  coturn:
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+
+networks:
+  web:
+    external: true
